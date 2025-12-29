@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NexusMed - Touchless Patient Interface</title>
+  <style>
+    :root {
+      --primary-color: #005b96;
+      --secondary-color: #00a8e8;
+      --accent-color: #ff6b6b;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --success-color: #28a745;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --permission-granted: #28a745;
+      --permission-denied: #dc3545;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      margin: 0;
+      padding: 0;
+      color: var(--dark-color);
+      min-height: 100vh;
+      transition: background-color 0.3s ease;
+    }
+
+    header {
+      background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    h1 {
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .control-panel {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .control-btn {
+      padding: 0.75rem 1.5rem;
+      background-color: rgba(255, 255, 255, 0.2);
+      border: 2px solid white;
+      color: white;
+      font-size: 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .control-btn:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .control-btn.active {
+      background-color: white;
+      color: var(--primary-color);
+    }
+
+    .control-btn.permission-granted {
+      border-color: var(--permission-granted);
+      box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
+    }
+
+    .control-btn.permission-denied {
+      border-color: var(--permission-denied);
+      box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
+    }
+
+    .control-btn i {
+      font-size: 1.2rem;
+    }
+
+    main {
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      min-height: calc(100vh - 200px);
+    }
+
+    .data-container {
+      width: 90%;
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+
+    .sidebar {
+      background: white;
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      height: fit-content;
+    }
+
+    .patient-info {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .patient-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--secondary-color);
+      margin: 0 auto 1rem;
+    }
+
+    .patient-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0.5rem 0;
+    }
+
+    .patient-id {
+      font-size: 0.9rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .nav-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .nav-item {
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background-color: rgba(0, 168, 232, 0.1);
+      transform: translateX(5px);
+    }
+
+    .nav-item.active {
+      background-color: var(--secondary-color);
+      color: white;
+      font-weight: 500;
+    }
+
+    .nav-item i {
+      font-size: 1.1rem;
+    }
+
+    .data-section {
+      display: none;
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .data-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+      color: var(--primary-color);
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eee;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .data-card {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      border-left: 4px solid var(--secondary-color);
+    }
+
+    .data-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+      font-size: 1rem;
+    }
+
+    .card-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+      color: var(--dark-color);
+    }
+
+    .card-unit {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .medication-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .medication-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .medication-name {
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .medication-details {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0.3rem 0 0;
+    }
+
+    .medication-time {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .history-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .history-date {
+      font-size: 0.9rem;
+      color: #666;
+      margin: 0 0 0.5rem;
+    }
+
+    .history-diagnosis {
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: var(--primary-color);
+    }
+
+    .history-description {
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    #status {
+      text-align: center;
+      margin: 1rem auto;
+      padding: 0.8rem;
+      border-radius: 50px;
+      max-width: 300px;
+      font-weight: 500;
+      background-color: rgba(0, 168, 232, 0.1);
+      color: var(--primary-color);
+      transition: all 0.3s ease;
+    }
+
+    #gestureCam {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 200px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      border: 3px solid white;
+      z-index: 100;
+      transform: scaleX(-1);
+    }
+
+    .gesture-indicator {
+      position: fixed;
+      right: 20px;
+      bottom: 240px;
+      background: white;
+      padding: 0.8rem 1.2rem;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      font-weight: 600;
+      color: var(--primary-color);
+      display: none;
+      z-index: 100;
+    }
+
+    .voice-indicator {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      background: white;
+      padding: 0.8rem 1.2rem;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      font-weight: 600;
+      color: var(--primary-color);
+      display: none;
+      z-index: 100;
+    }
+
+    .emergency-btn {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      background: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+
+    .emergency-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(220, 53, 69, 0.5);
+    }
+
+    .emergency-card {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(220, 53, 69, 0.1);
+      border-radius: 15px;
+      border: 2px dashed var(--danger-color);
+    }
+
+    .emergency-cancel {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: white;
+      border: 2px solid var(--danger-color);
+      color: var(--danger-color);
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .permission-status {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: white;
+      padding: 0.8rem 1.2rem;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      font-weight: 600;
+      color: var(--primary-color);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .permission-status i {
+      font-size: 1.2rem;
+    }
+
+    .permission-granted {
+      color: var(--success-color);
+    }
+
+    .permission-denied {
+      color: var(--danger-color);
+    }
+
+    @media (max-width: 768px) {
+      .data-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        order: -1;
+      }
+      
+      #gestureCam {
+        width: 150px;
+        right: 10px;
+        bottom: 10px;
+      }
+      
+      .gesture-indicator {
+        right: 10px;
+        bottom: 170px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+
+
+
+    <!-- PERMISSION SYSTEM -->
+
+
+<!-- SRK -->
+
+    <div class="permission-status">
+      <i class="fas fa-microphone-alt"></i>
+      <span id="micStatus">Mic: Permission not requested</span>
+      <i class="fas fa-camera"></i>
+      <span id="camStatus">Cam: Permission not requested</span>
+    </div>
+    <!-- SRK -->
+
+
+
+
+
+    <!-- AG -->
+    <header>
+      <h1>NexusMed Patient Interface</h1>
+      <div class="control-panel">
+        <button id="voiceToggle" class="control-btn">
+          <i class="fas fa-microphone"></i> Voice Control
+        </button>
+        <button id="gestureToggle" class="control-btn">
+          <i class="fas fa-hand-paper"></i> Gesture Control
+        </button>
+      </div>
+    </header>
+    <!-- AG -->
+
+
+
+
+
+
+
+<!-- SRK -->
+
+    <button id="emergencyBtn" class="emergency-btn">
+      <i class="fas fa-bell"></i> Emergency
+    </button>
+    
+    <main>
+      <div class="data-container">
+        <aside class="sidebar">
+          <div class="patient-info">
+            <img src="https://ui-avatars.com/api/?name=John+Doe&background=005b96&color=fff" alt="Patient" class="patient-avatar">
+            <h3 class="patient-name">John Doe</h3>
+            <p class="patient-id">ID: PT-789456</p>
+          </div>
+          
+          <ul class="nav-menu">
+            <li class="nav-item active" data-section="vitals">
+              <i class="fas fa-heartbeat"></i> Vitals
+            </li>
+            <li class="nav-item" data-section="medications">
+              <i class="fas fa-pills"></i> Medications
+            </li>
+            <li class="nav-item" data-section="history">
+              <i class="fas fa-history"></i> Medical History
+            </li>
+            <li class="nav-item" data-section="lab">
+              <i class="fas fa-flask"></i> Lab Results
+            </li>
+            <li class="nav-item" data-section="appointments">
+              <i class="fas fa-calendar-alt"></i> Appointments
+            </li>
+            <li class="nav-item" data-section="emergency">
+              <i class="fas fa-bell"></i> Emergency
+            </li>
+          </ul>
+        </aside>
+        <!-- SRK -->
+
+
+
+
+
+
+
+
+
+        <!-- SRK -->
+        <div class="content-area">
+          <section id="vitals" class="data-section active">
+            <h2 class="section-header">Patient Vitals</h2>
+            <div class="data-grid">
+              <div class="data-card">
+                <h3 class="card-title">Heart Rate</h3>
+                <p class="card-value">72 <span class="card-unit">BPM</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Normal</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">Blood Pressure</h3>
+                <p class="card-value">118/76 <span class="card-unit">mmHg</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Normal</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">Temperature</h3>
+                <p class="card-value">98.4 <span class="card-unit">°F</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Normal</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">Oxygen Saturation</h3>
+                <p class="card-value">98 <span class="card-unit">%</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Normal</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">Respiratory Rate</h3>
+                <p class="card-value">16 <span class="card-unit">breaths/min</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Normal</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">Glucose Level</h3>
+                <p class="card-value">102 <span class="card-unit">mg/dL</span></p>
+                <p class="card-status"><i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i> Elevated</p>
+              </div>
+            </div>
+          </section>
+<!-- SRK -->
+
+
+
+
+          <!-- AG -->
+          <section id="medications" class="data-section">
+            <h2 class="section-header">Current Medications</h2>
+            <ul class="medication-list">
+              <li class="medication-item">
+                <div>
+                  <h3 class="medication-name">Atorvastatin</h3>
+                  <p class="medication-details">10mg Tablet - For cholesterol management</p>
+                </div>
+                <span class="medication-time">Morning</span>
+              </li>
+              <li class="medication-item">
+                <div>
+                  <h3 class="medication-name">Metformin</h3>
+                  <p class="medication-details">500mg Tablet - For type 2 diabetes</p>
+                </div>
+                <span class="medication-time">Evening</span>
+              </li>
+              <li class="medication-item">
+                <div>
+                  <h3 class="medication-name">Lisinopril</h3>
+                  <p class="medication-details">20mg Tablet - For blood pressure</p>
+                </div>
+                <span class="medication-time">Morning</span>
+              </li>
+              <li class="medication-item">
+                <div>
+                  <h3 class="medication-name">Aspirin</h3>
+                  <p class="medication-details">81mg Tablet - Blood thinner</p>
+                </div>
+                <span class="medication-time">Bedtime</span>
+              </li>
+            </ul>
+          </section>
+<!-- AG -->
+
+
+
+          <!-- RS -->
+          <section id="history" class="data-section">
+            <h2 class="section-header">Medical History</h2>
+            <div class="history-item">
+              <p class="history-date">March 15, 2023</p>
+              <h3 class="history-diagnosis">Type 2 Diabetes</h3>
+              <p class="history-description">Diagnosed in 2018. Currently managed with diet, exercise, and Metformin. Last HbA1c was 6.8%.</p>
+            </div>
+            <div class="history-item">
+              <p class="history-date">January 5, 2022</p>
+              <h3 class="history-diagnosis">Hyperlipidemia</h3>
+              <p class="history-description">Elevated LDL cholesterol. Started on Atorvastatin 10mg daily. Last LDL was 110 mg/dL.</p>
+            </div>
+            <div class="history-item">
+              <p class="history-date">August 20, 2021</p>
+              <h3 class="history-diagnosis">Hypertension</h3>
+              <p class="history-description">Blood pressure consistently elevated. Started on Lisinopril 20mg daily. Well controlled now.</p>
+            </div>
+            <div class="history-item">
+              <p class="history-date">June 10, 2019</p>
+              <h3 class="history-diagnosis">Penicillin Allergy</h3>
+              <p class="history-description">Developed rash and swelling after taking penicillin. Confirmed allergy.</p>
+            </div>
+          </section>
+
+<!-- RS -->
+
+
+
+
+
+<!-- AG -->
+
+          <section id="lab" class="data-section">
+            <h2 class="section-header">Lab Results</h2>
+            <div class="data-grid">
+              <div class="data-card">
+                <h3 class="card-title">Hemoglobin A1c</h3>
+                <p class="card-value">6.8 <span class="card-unit">%</span></p>
+                <p class="card-status"><i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i> Elevated</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">LDL Cholesterol</h3>
+                <p class="card-value">110 <span class="card-unit">mg/dL</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Controlled</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">Creatinine</h3>
+                <p class="card-value">1.0 <span class="card-unit">mg/dL</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Normal</p>
+              </div>
+              <div class="data-card">
+                <h3 class="card-title">WBC Count</h3>
+                <p class="card-value">6.5 <span class="card-unit">x10³/µL</span></p>
+                <p class="card-status"><i class="fas fa-check-circle" style="color: var(--success-color);"></i> Normal</p>
+              </div>
+            </div>
+          </section>
+
+<!-- AG -->
+
+
+
+
+
+          <!-- RS -->
+          <section id="appointments" class="data-section">
+            <h2 class="section-header">Upcoming Appointments</h2>
+            <div class="history-item">
+              <p class="history-date">June 25, 2023 - 10:30 AM</p>
+              <h3 class="history-diagnosis">Dr. Sarah Johnson - Endocrinology</h3>
+              <p class="history-description">Follow-up for diabetes management and medication review.</p>
+            </div>
+            <div class="history-item">
+              <p class="history-date">July 10, 2023 - 2:15 PM</p>
+              <h3 class="history-diagnosis">Dr. Michael Chen - Cardiology</h3>
+              <p class="history-description">Annual cardiac evaluation and stress test.</p>
+            </div>
+          </section>
+
+          <section id="emergency" class="data-section">
+            <h2 class="section-header">Emergency Protocol</h2>
+            <div class="emergency-card">
+              <i class="fas fa-bell" style="font-size: 3rem; color: var(--danger-color);"></i>
+              <h3>Emergency Alert Activated</h3>
+              <p>Medical team has been notified. Help is on the way.</p>
+              <button id="emergencyCancel" class="emergency-cancel">Cancel Alert</button>
+            </div>
+          </section>
+
+          
+        </div>
+      </div>
+    </main>
+
+    <div id="status">System Ready</div>
+    <div id="gestureIndicator" class="gesture-indicator">
+      <i class="fas fa-hand-paper"></i> Gesture Detected: None
+    </div>
+    <div id="voiceIndicator" class="voice-indicator">
+      <i class="fas fa-microphone"></i> Listening...
+    </div>
+    <video id="gestureCam" autoplay muted playsinline></video>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  
+  <!-- RS -->
+  
+  
+  
+  <script>
+
+
+
+
+
+
+
+
+
+
+
+
+//AG
+
+
+    // ===== CONFIGURATION =====
+    const sections = ["vitals", "medications", "history", "lab", "appointments", "emergency"];
+    let currentSection = 0;
+    let isVoiceActive = false;
+    let isGestureActive = false;
+    let lastGestureTime = 0;
+    const gestureCooldown = 800; // Milliseconds between gestures
+    
+    // Track permission states
+    let micPermissionGranted = false;
+    let camPermissionGranted = false;
+
+
+
+
+    //RS
+
+    // ===== DOM ELEMENTS =====
+    const statusEl = document.getElementById("status");
+    const voiceBtn = document.getElementById("voiceToggle");
+    const gestureBtn = document.getElementById("gestureToggle");
+    const gestureIndicator = document.getElementById("gestureIndicator");
+    const voiceIndicator = document.getElementById("voiceIndicator");
+    const navItems = document.querySelectorAll(".nav-item");
+    const video = document.getElementById("gestureCam");
+    const emergencyCancelBtn = document.getElementById("emergencyCancel");
+    const emergencyBtn = document.getElementById("emergencyBtn");
+    const micStatusEl = document.getElementById("micStatus");
+    const camStatusEl = document.getElementById("camStatus");
+
+
+
+
+
+
+
+
+
+//SRK
+
+
+    // ===== PERMISSION HANDLING =====
+    async function requestPermissions() {
+      try {
+        // Request camera permission
+        const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        cameraStream.getTracks().forEach(track => track.stop());
+        camPermissionGranted = true;
+        gestureBtn.classList.add("permission-granted");
+        camStatusEl.textContent = "Cam: Permission granted";
+        camStatusEl.classList.add("permission-granted");
+        
+        // Request microphone permission
+        const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStream.getTracks().forEach(track => track.stop());
+        micPermissionGranted = true;
+        voiceBtn.classList.add("permission-granted");
+        micStatusEl.textContent = "Mic: Permission granted";
+        micStatusEl.classList.add("permission-granted");
+        
+        statusEl.textContent = "Permissions granted";
+      } catch (error) {
+        console.error("Permission error:", error);
+        statusEl.textContent = "Some permissions denied";
+        
+        if (error.name === 'NotAllowedError') {
+          if (!camPermissionGranted) {
+            gestureBtn.classList.add("permission-denied");
+            camStatusEl.textContent = "Cam: Permission denied";
+            camStatusEl.classList.add("permission-denied");
+          }
+          if (!micPermissionGranted) {
+            voiceBtn.classList.add("permission-denied");
+            micStatusEl.textContent = "Mic: Permission denied";
+            micStatusEl.classList.add("permission-denied");
+          }
+        }
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+//AG
+
+    // ===== VOICE CONTROL =====
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false; // Set to false to manage restarts manually
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    // Voice command processor
+    recognition.onresult = (event) => {
+      const command = event.results[event.results.length-1][0].transcript.trim().toLowerCase();
+      voiceIndicator.textContent = `Heard: ${command}`;
+      
+      // Command routing
+      if (command.includes("next") || command.includes("right")) {
+        navigate(1);
+      } 
+      else if (command.includes("previous") || command.includes("back") || command.includes("left")) {
+        navigate(-1);
+      }
+      else if (command.includes("vitals")) {
+        jumpToSection("vitals");
+      }
+      else if (command.includes("medication")) {
+        jumpToSection("medications");
+      }
+      else if (command.includes("history")) {
+        jumpToSection("history");
+      }
+      else if (command.includes("lab") || command.includes("results")) {
+        jumpToSection("lab");
+      }
+      else if (command.includes("appointment") || command.includes("schedule")) {
+        jumpToSection("appointments");
+      }
+      else if (command.includes("emergency") || command.includes("help")) {
+        jumpToSection("emergency");
+        triggerEmergency();
+      }
+      else if (command.includes("enable voice")) {
+        startVoiceControl();
+      }
+      else if (command.includes("disable voice")) {
+        stopVoiceControl();
+      }
+    };
+
+    // Handle when speech recognition ends
+    recognition.onend = () => {
+      if (isVoiceActive) {
+        // If voice control is still active, restart recognition
+        statusEl.textContent = "Voice: Restarting...";
+        recognition.start();
+      } else {
+        statusEl.textContent = "Voice: Off";
+      }
+    };
+
+    // Handle errors in speech recognition
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === 'no-speech') {
+        statusEl.textContent = "Voice: No speech detected. Listening...";
+      } else if (event.error === 'not-allowed') {
+        statusEl.textContent = "Voice: Microphone access denied.";
+        speak("Microphone access denied. Please allow access in your browser settings.");
+        stopVoiceControl(); // Stop voice control if permission is denied
+      } else if (event.error === 'audio-capture') {
+        statusEl.textContent = "Voice: Audio capture failed.";
+        speak("Audio capture failed. Please check your microphone.");
+        stopVoiceControl();
+      } else {
+        statusEl.textContent = `Voice: Error (${event.error}). Restarting...`;
+      }
+      // Attempt to restart if an error occurs and voice control is still active
+      if (isVoiceActive) {
+        recognition.start();
+      }
+    };
+
+    // Voice control toggle
+    voiceBtn.addEventListener("click", toggleVoiceControl);
+
+    function toggleVoiceControl() {
+      if (!isVoiceActive) {
+        startVoiceControl();
+      } else {
+        stopVoiceControl();
+      }
+    }
+
+    function startVoiceControl() {
+      // Check if we have permission
+      if (!micPermissionGranted) {
+        statusEl.textContent = "Voice: Microphone permission not granted";
+        speak("Microphone permission not granted. Please allow access.");
+        return;
+      }
+      
+      try {
+        recognition.start();
+        isVoiceActive = true;
+        voiceBtn.classList.add("active");
+        voiceIndicator.style.display = "flex";
+        speak("Voice control enabled");
+        statusEl.textContent = "Voice: Listening...";
+      } catch (e) {
+        console.error("Voice recognition start failed:", e);
+        statusEl.textContent = "Voice: Permission denied or error.";
+        speak("Failed to start voice control. Please check microphone permissions.");
+        // Reset state if starting failed
+        isVoiceActive = false;
+        voiceBtn.classList.remove("active");
+        voiceIndicator.style.display = "none";
+      }
+    }
+
+    function stopVoiceControl() {
+      recognition.stop(); // This will trigger onend, which will then not restart if isVoiceActive is false
+      isVoiceActive = false;
+      voiceBtn.classList.remove("active");
+      voiceIndicator.style.display = "none";
+      statusEl.textContent = "Voice: Off";
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//RS
+
+
+    // ===== GESTURE CONTROL =====
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.5
+    });
+
+    // Enhanced gesture detection
+    hands.onResults = (results) => {
+      if (!isGestureActive || Date.now() - lastGestureTime < gestureCooldown) return;
+      
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        const thumb = landmarks[4], index = landmarks[8], pinky = landmarks[20];
+        
+        // Horizontal swipe detection
+        // Adjusted thresholds slightly for better detection
+        // Check if index finger is significantly to the left/right of thumb, and y-coordinates are relatively close
+        if (index.x < thumb.x - 0.15 && Math.abs(index.y - thumb.y) < 0.1) { // Swipe right (index moves left relative to thumb)
+          navigate(1);
+          showGestureFeedback("👉 Swipe Right (Next)");
+          return;
+        }
+        if (index.x > thumb.x + 0.15 && Math.abs(index.y - thumb.y) < 0.1) { // Swipe left (index moves right relative to thumb)
+          navigate(-1);
+          showGestureFeedback("👈 Swipe Left (Previous)");
+          return;
+        }
+        
+        // Vertical swipe up (emergency)
+        // Check if index finger is significantly above the thumb
+        if (index.y < thumb.y - 0.3) { 
+          jumpToSection("emergency");
+          triggerEmergency();
+          showGestureFeedback("🆘 Emergency Activated");
+          return;
+        }
+        
+        // Pinch detection (thumb and index finger close)
+        const pinchDist = Math.sqrt(Math.pow(thumb.x - index.x, 2) + Math.pow(thumb.y - index.y, 2));
+        if (pinchDist < 0.08) {
+          showGestureFeedback("🤏 Pinch (Select)");
+          // Add custom action here if needed
+          return;
+        }
+      }
+      gestureIndicator.textContent = "✋ Show hand to camera";
+    };
+
+    function showGestureFeedback(text) {
+      gestureIndicator.textContent = text;
+      lastGestureTime = Date.now();
+    }
+
+    // Camera setup
+    const camera = new Camera(video, {
+      onFrame: async () => {
+        try {
+          if (isGestureActive) await hands.send({ image: video });
+        } catch (e) {
+          console.error("Camera send error:", e);
+          // This error is usually not permission related, but processing issues.
+        }
+      },
+      width: 640,
+      height: 480
+    });
+
+    // Gesture control toggle
+    gestureBtn.addEventListener("click", toggleGestureControl);
+
+    function toggleGestureControl() {
+      if (!isGestureActive) {
+        // Check if we have permission
+        if (!camPermissionGranted) {
+          statusEl.textContent = "Gestures: Camera permission not granted";
+          speak("Camera permission not granted. Please allow access.");
+          return;
+        }
+        
+        // The camera.start() method will trigger the permission prompt.
+        // If permission is denied, it will throw an error.
+        camera.start().then(() => {
+          isGestureActive = true;
+          gestureBtn.classList.add("active");
+          gestureIndicator.style.display = "flex";
+          speak("Gesture control enabled");
+          statusEl.textContent = "Gestures: Active";
+        }).catch(e => {
+          console.error("Camera start failed:", e);
+          gestureIndicator.textContent = "❌ Camera blocked or permission denied";
+          statusEl.textContent = "Gestures: Permission denied or error.";
+          speak("Failed to start gesture control. Please check camera permissions.");
+          // Reset state if starting failed
+          isGestureActive = false;
+          gestureBtn.classList.remove("active");
+          gestureIndicator.style.display = "none";
+        });
+      } else {
+        camera.stop();
+        isGestureActive = false;
+        gestureBtn.classList.remove("active");
+        gestureIndicator.style.display = "none";
+        statusEl.textContent = "Gestures: Off";
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//SRK
+    
+    // ===== CORE FUNCTIONS =====
+    function navigate(direction) {
+      currentSection = (currentSection + direction + sections.length) % sections.length;
+      updateSection();
+      speak(`Showing ${sections[currentSection]}`);
+    }
+
+    function jumpToSection(sectionName) {
+      const newIndex = sections.indexOf(sectionName);
+      if (newIndex !== -1) {
+        currentSection = newIndex;
+        updateSection();
+        speak(`Showing ${sectionName}`);
+      } else {
+        console.warn(`Section "${sectionName}" not found.`);
+        speak(`Section ${sectionName} not found.`);
+      }
+    }
+
+    function updateSection() {
+      document.querySelectorAll(".data-section").forEach((el, i) => {
+        el.classList.toggle("active", i === currentSection);
+      });
+      navItems.forEach((item, i) => {
+        item.classList.toggle("active", i === currentSection);
+      });
+    }
+
+    function triggerEmergency() {
+      speak("Emergency alert activated! Help is on the way.");
+      statusEl.textContent = "EMERGENCY ALERT!";
+      statusEl.style.backgroundColor = "var(--danger-color)";
+      statusEl.style.color = "white";
+      document.body.style.animation = "emergencyFlash 0.5s 3";
+      
+      // Auto-cancel after 10 seconds
+      setTimeout(() => {
+        resetEmergency();
+      }, 10000);
+    }
+
+    function resetEmergency() {
+      statusEl.textContent = "System Ready";
+      statusEl.style.backgroundColor = "";
+      statusEl.style.color = "";
+      document.body.style.animation = "";
+    }
+
+    // Emergency button click handler
+    emergencyBtn.addEventListener("click", () => {
+      jumpToSection("emergency");
+      triggerEmergency();
+    });
+
+    // Emergency cancel button
+    if (emergencyCancelBtn) {
+      emergencyCancelBtn.addEventListener("click", resetEmergency);
+    }
+
+    function speak(text) {
+      // Check if speech synthesis is available and not already speaking
+      if ('speechSynthesis' in window && !window.speechSynthesis.speaking) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+      } else if (!('speechSynthesis' in window)) {
+        console.warn("Speech Synthesis not supported in this browser.");
+      }
+    }
+
+    // ===== INITIALIZATION =====
+    document.addEventListener("DOMContentLoaded", () => {
+      updateSection(); // Set initial active section (Vitals)
+
+      // Add click listeners to navigation items
+      navItems.forEach(item => {
+        item.addEventListener("click", () => {
+          const sectionName = item.dataset.section;
+          jumpToSection(sectionName);
+        });
+      });
+      
+      // Add emergency flash animation
+      const style = document.createElement("style");
+      style.textContent = `
+        @keyframes emergencyFlash {
+          0%, 100% { background-color: inherit; }
+          50% { background-color: rgba(220, 53, 69, 0.3); }
+        }
+      `;
+      document.head.appendChild(style);
+      // Request permissions on load
+      requestPermissions();
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</body>
+</html>
